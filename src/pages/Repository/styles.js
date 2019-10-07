@@ -46,9 +46,25 @@ export const Owner = styled.header`
   }
 `;
 
-export const IssueList = styled.ul`
-  padding-top: 30px;
+export const IssueOption = styled.div`
+  display: flex;
+  align-items: center;
   margin-top: 30px;
+
+  button {
+    background: none;
+    border: none;
+    color: #7b68ee;
+    margin: 0 8px;
+
+    &:hover {
+      color: #6c5bd0;
+    }
+  }
+`;
+
+export const IssueList = styled.ul`
+  padding-top: 10px;
   border-top: 1 solid #eee;
   list-style: none;
 
