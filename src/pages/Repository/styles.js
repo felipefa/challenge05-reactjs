@@ -49,6 +49,7 @@ export const Owner = styled.header`
 export const IssueOption = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-top: 30px;
 
   button {
@@ -59,6 +60,10 @@ export const IssueOption = styled.div`
 
     &:hover {
       color: #6c5bd0;
+    }
+
+    &[disabled] {
+      color: #aaa;
     }
   }
 `;

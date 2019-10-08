@@ -11,6 +11,7 @@ export default class Repository extends Component {
     super().state = {
       repository: {},
       issues: [],
+      issuePage: 1,
       issueState: 'open',
       loading: true,
     };
@@ -18,13 +19,13 @@ export default class Repository extends Component {
 
   async componentDidMount() {
     const { match } = this.props;
-    const { issueState } = this.state;
+    const { issuePage, issueState } = this.state;
 
     const repoName = decodeURIComponent(match.params.repository);
 
     const [repository, issues] = await Promise.all([
       api.get(`/repos/${repoName}`),
-      api.get(`/repos/${repoName}/issues`, {
+      api.get(`/repos/${repoName}/issues?page=${issuePage}`, {
         params: {
           state: issueState,
           per_page: 5,
@@ -39,20 +40,53 @@ export default class Repository extends Component {
     });
   }
 
+  handleIssuePage = async issuePagination => {
+    this.setState({ loading: true });
+
+    const { issuePage, issueState } = this.state;
+    const { match } = this.props;
+
+    const repoName = decodeURIComponent(match.params.repository);
+
+    let newIssuePage = issuePage;
+
+    if (issuePagination === 'next') {
+      newIssuePage += 1;
+    } else if (issuePagination === 'previous') {
+      newIssuePage -= 1;
+    }
+
+    const { data: issues } = await api.get(
+      `/repos/${repoName}/issues?page=${newIssuePage}`,
+      {
+        params: {
+          state: issueState,
+          per_page: 5,
+        },
+      }
+    );
+
+    this.setState({ issues, issuePage: newIssuePage, loading: false });
+  };
+
   handleIssueState = async newIssueState => {
     this.setState({ loading: true });
-    const { issueState } = this.state;
+
+    const { issuePage, issueState } = this.state;
 
     if (issueState !== newIssueState) {
       const { match } = this.props;
       const repoName = decodeURIComponent(match.params.repository);
 
-      const { data: issues } = await api.get(`/repos/${repoName}/issues`, {
-        params: {
-          state: newIssueState,
-          per_page: 5,
-        },
-      });
+      const { data: issues } = await api.get(
+        `/repos/${repoName}/issues?page=${issuePage}`,
+        {
+          params: {
+            state: newIssueState,
+            per_page: 5,
+          },
+        }
+      );
 
       this.setState({ issues, issueState: newIssueState });
     }
@@ -61,7 +95,7 @@ export default class Repository extends Component {
   };
 
   render() {
-    const { repository, issues, loading } = this.state;
+    const { repository, issues, loading, issuePage } = this.state;
 
     if (loading) {
       return <Loading>Carregando</Loading>;
@@ -77,16 +111,33 @@ export default class Repository extends Component {
         </Owner>
 
         <IssueOption>
-          Estado:
-          <button type="button" onClick={() => this.handleIssueState('all')}>
-            Todas
-          </button>
-          <button type="button" onClick={() => this.handleIssueState('open')}>
-            Em Aberto
-          </button>
-          <button type="button" onClick={() => this.handleIssueState('closed')}>
-            Fechada
-          </button>
+          <div>
+            Estado:
+            <button type="button" onClick={() => this.handleIssueState('all')}>
+              Todas
+            </button>
+            <button type="button" onClick={() => this.handleIssueState('open')}>
+              Em Aberto
+            </button>
+            <button
+              type="button"
+              onClick={() => this.handleIssueState('closed')}
+            >
+              Fechada
+            </button>
+          </div>
+          <div>
+            <button
+              type="button"
+              disabled={issuePage === 1}
+              onClick={() => this.handleIssuePage('previous')}
+            >
+              Anterior
+            </button>
+            <button type="button" onClick={() => this.handleIssuePage('next')}>
+              Próxima
+            </button>
+          </div>
         </IssueOption>
 
         <IssueList>
